@@ -15,7 +15,7 @@ class PostCommentView(APIView):
 
     def post(self, request, format=None):
         serializer = self.serializer_class(data=request.data)
-        print(request.user)
+        # print(request.user)
         if serializer.is_valid():
             account = Account.objects.get(user=request.user)
             serializer.save(account=account)

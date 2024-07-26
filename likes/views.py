@@ -27,19 +27,19 @@ class LikeView(APIView):
             return None
 
     def post(self, request, format=None):
-        print('r',request.user)
+        # print('r',request.user)
         serializer = self.serializer_class(data=request.data)
 
         if serializer.is_valid():
             post = serializer.validated_data['post']
-            print(post)
+            # print(post)
             id = self.get_objects(self.request, post)
             # print(ans)
             if id is None:
                 # user er like ta save hocca 
                 # print(id)
                 account = Account.objects.get(user=request.user)
-                print('a',account)
+                # print('a',account)
                 serializer.save(account=account)
             else:
                 # user jodi akta post already like deye thake tobe se jodi second time like dete jai tobe oi like dislike hoi e jabe

@@ -27,7 +27,7 @@ class PostUploadView(APIView):
         if serializer.is_valid():
             # print(serializer.validated_data['image_url'])
             account = self.get_objects(request.user)
-            print(account.user)
+            # print(account.user)
             serializer.save(account=account)
             return Response({'details': 'post added successfully'},status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -44,14 +44,14 @@ class PostDetail(APIView):
             raise Http404
         
     def get(self, request, pk, format=None):
-        print(request.user)
+        # print(request.user)
         post = self.get_objects(pk)
         # serializer = self.serializer_class(post)
         serializer = serializers.PostSerializer(post)
         return Response(serializer.data)
     
     def put(self, request, pk, format=None):
-        print('edit by',request.user)
+        # print('edit by',request.user)
         post = self.get_objects(pk)
         serializer = self.serializer_class(post, data=request.data)
         if serializer.is_valid():

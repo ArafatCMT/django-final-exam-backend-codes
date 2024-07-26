@@ -25,14 +25,14 @@ class RegistrationView(APIView):
 
         if serializer.is_valid():
             user = serializer.save()
-            print(user)
-            print(request.user)
+            # print(user)
+            # print(request.user)
 
             # confirmation mail ta ke strong korar jonno token and uid user korta ci 
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
 
-            verification_link = f"http://127.0.0.1:8000/accounts/verify/{uid}/{token}"
+            verification_link = f"https://net-book.onrender.com/accounts/verify/{uid}/{token}"
 
             email_subject = "Verify Your Account"
             email_body = render_to_string('Verification_mail.html', {'verification_link': verification_link})
@@ -67,16 +67,16 @@ class LoginView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
-            print(username, password)
+            # print(username, password)
 
             user = authenticate(username=username, password=password)
-            print(user)
+            # print(user)
 
             if user:
                 token, _ = Token.objects.get_or_create(user=user)
-                print('get',token)
-                print('new', _)
-                login(request, user)
+                # print('get',token)
+                # print('new', _)
+                # login(request, user)
                 return Response({'token': token.key, 'user_id': user.id})
             else:
                 return Response({'error': "Invalid Credential"})
@@ -86,7 +86,7 @@ class LoginView(APIView):
 class UserLogoutView(APIView):
     # permission_classes = [IsAuthenticated]
     def get(self, request):
-        print('logout',request.user)
+        # print('logout',request.user)
         # request.user.auth_token.delete()
         logout(request)
         return Response({'details': 'logout successfully'})
@@ -103,13 +103,13 @@ class EditProfileView(APIView):
             raise Http404 
         
     def get(self, request, pk, format=None):
-        print(request.user)
+        # print(request.user)
         account = self.get_objects(pk)
         serializer = self.serializer_class(account)
         return Response(serializer.data)
     
     def put(self, request, pk, format=None):
-        print(request.user)
+        # print(request.user)
         account = self.get_objects(pk)
         serializer = self.serializer_class(account, data=request.data)
         
@@ -130,7 +130,7 @@ class FindUserApiView(APIView):
             raise Http404 
         
     def get(self, request, pk, format=None):
-        print(request.user)
+        # print(request.user)
         account = self.get_objects(pk)
         serializer = self.serializer_class(account)
         return Response(serializer.data)
