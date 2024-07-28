@@ -67,7 +67,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
-            # print(username, password)
+            print(username, password)
 
             user = authenticate(username=username, password=password)
             # print(user)
@@ -75,8 +75,8 @@ class LoginView(APIView):
             if user:
                 token, _ = Token.objects.get_or_create(user=user)
                 # print('get',token)
-                # print('new', _)
-                # login(request, user)
+
+                login(request, user)
                 return Response({'token': token.key, 'user_id': user.id})
             else:
                 return Response({'error': "Invalid Credential"})
