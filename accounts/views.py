@@ -35,7 +35,7 @@ class RegistrationView(APIView):
             verification_link = f"https://net-book.onrender.com/accounts/verify/{uid}/{token}"
 
             email_subject = "Verify Your Account"
-            email_body = render_to_string('Verification_mail.html', {'verification_link': verification_link})
+            email_body = render_to_string('verification_mail.html', {'verification_link': verification_link})
             email = EmailMultiAlternatives(email_subject, '', to=[user.email])
             email.attach_alternative(email_body, "text/html")
             email.send()
@@ -67,7 +67,7 @@ class LoginView(APIView):
         if serializer.is_valid():
             username = serializer.validated_data['username']
             password = serializer.validated_data['password']
-            print(username, password)
+            # print(username, password)
 
             user = authenticate(username=username, password=password)
             # print(user)
