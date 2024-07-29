@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from accounts.models import Account
 from rest_framework import filters
 from rest_framework import generics
+from django.http import Http404
+from . permissions import IsAuthorOrReadOnly
 # Create your views here.
 
 class PostCommentView(APIView):
@@ -22,6 +24,34 @@ class PostCommentView(APIView):
             # print(account)
             return Response({'details': 'comment successfully'},status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+class UpdateAndDeleteCommentView(APIView):
+    permission_classes = [IsAuthorOrReadOnly]
+    serializer_class = CommentSerializer
+    def get_objects(self, pk):
+        try:
+            return Comment.objects.get(pk=pk)
+        except(Comment.DoesNotExist):
+            raise Http404
+
+    def get(self, request, pk, format=None):
+        comment = self.get_objects(pk)
+        serializer = self.serializer_class(comment)
+        return Response(serializer.data)
+
+    def put(self, request, pk, format=None):
+        comment = self.get_objects(pk)
+        serializer = self.serializer_class(comment, data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, pk, format=None):
+        comment = self.get_objects(pk)
+        comment.delete()
+        return Response({'details': "comment deleted successfully"},status=status.HTTP_204_NO_CONTENT)
 
 
 class CommentForSpecificPost(filters.BaseFilterBackend):
