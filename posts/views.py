@@ -69,7 +69,6 @@ class PostForSpecificUser(filters.BaseFilterBackend):
     def filter_queryset(self, request, queryset, view):
         # print('all post', request.user)
         account_id = request.query_params.get('account_id')
-        # print(account_id)
         if account_id:
             return queryset.filter(account = account_id)
         return queryset
