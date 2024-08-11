@@ -64,3 +64,4 @@ class ShowLikeView(generics.ListAPIView):
     queryset = Like.objects.all()
     serializer_class = LikeSerializer
     filter_backends = [LikeForSpecificPost]
+
