@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from accounts.models import Account
+from accounts.models import Account,FriendRequest, Friends
 from django.contrib.auth.models import User
 
 class RegistrationSerializer(serializers.ModelSerializer):
@@ -53,3 +53,16 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['username', 'first_name', 'last_name', 'email']
+
+class FriendRequestSerializer(serializers.ModelSerializer):#
+    class Meta:
+        model = FriendRequest
+        fields = ['id','sender', 'receiver']
+        read_only_fields = ['sender']
+
+
+class FriendSerializer(serializers.ModelSerializer):#
+
+    class Meta:
+        model = Friends
+        fields = ['id', 'receiver_account', 'sender_account']

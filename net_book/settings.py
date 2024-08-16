@@ -120,7 +120,8 @@ WSGI_APPLICATION = 'net_book.wsgi.application'
 DATABASES = {
     'default': dj_database_url.config(
         # Replace this value with your local database's connection string.
-        default='postgresql://net_book_anx5_user:EuvWXE2u2ClBDk5dCmb2GWeuyQ5pWrEC@dpg-cqse8e2j1k6c73fk6q50-a.oregon-postgres.render.com/net_book_anx5',
+        default='postgresql://postgres:postgres@localhost:5432/mysite',
+        conn_max_age=600
     )
 }
 

@@ -1,6 +1,6 @@
 from django.shortcuts import render,redirect
 from rest_framework.views import APIView
-from accounts.models import Account
+from accounts.models import Account, Friends,FriendRequest
 from accounts import serializers
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -16,6 +16,7 @@ from django.http import Http404
 from accounts.permissions import IsAuthorOrReadOnly
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import generics
+from rest_framework import filters
 
 # Create your views here.
 class RegistrationView(APIView):
@@ -139,3 +140,161 @@ class FindUserApiView(APIView):
 class AllProfileView(generics.ListAPIView):
     queryset = Account.objects.all()
     serializer_class = serializers.ProfileSerializer
+
+# start friend request views
+class FriendRequestAPIView(APIView):#
+      serializer_class = serializers.FriendRequestSerializer
+
+      def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+
+        if serializer.is_valid():
+            # print(serializer.validated_data['receiver'])
+            account = Account.objects.get(user=request.user)
+            # print(serializer.validated_data['sender'])
+            serializer.save(sender=account)
+            return Response({'details': 'request successfully'},status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+      
+class AcceptFriendRequestView(APIView):#
+    serializer_class = serializers.FriendSerializer
+
+    def get_objects(self, sender_id, receiver_id):
+        queryset = FriendRequest.objects.filter(sender_id = sender_id)
+
+        try:
+            return queryset.get(receiver_id = receiver_id)
+        except(FriendRequest.DoesNotExist):
+            return None
+        
+    def get(self, request, sender_id, receiver_id, is_accept, format=None):
+        object = self.get_objects(sender_id, receiver_id)
+
+        if object:
+            if is_accept == 1:
+                sender_account = Account.objects.get(id = object.sender.id)
+                recever_receiver = Account.objects.get(id = object.receiver.id)
+                friend = Friends.objects.create(receiver_account=recever_receiver, sender_account=sender_account)
+                
+                friend.save()
+                
+                object = FriendRequest.objects.get(id=object.id)
+                object.delete()
+
+            if is_accept == 0:
+                object = FriendRequest.objects.get(id=object.id)
+                object.delete()
+                print('deleted')
+        else:
+            print(object)
+        serializer = serializers.FriendRequestSerializer(object)
+        return Response(serializer.data)
+    
+class ShowFriendPart_1(filters.BaseFilterBackend):#
+    def filter_queryset(self, request, queryset, view):
+        account_id = request.query_params.get('account_id')
+        if account_id:
+            return queryset.filter(sender_account = account_id)
+        return queryset
+    
+class ShowFriendPart_2(filters.BaseFilterBackend):#
+    def filter_queryset(self, request, queryset, view):
+        account_id = request.query_params.get('account_id')
+        if account_id:
+            return queryset.filter(receiver_account = account_id)
+        return queryset
+    
+class FriendSendRequestAccept(generics.ListAPIView):#
+    queryset = Friends.objects.all()
+    serializer_class = serializers.FriendSerializer
+    filter_backends = [ShowFriendPart_1]
+
+class FriendReceiveRequestAccept(generics.ListAPIView):#
+    queryset = Friends.objects.all()
+    serializer_class = serializers.FriendSerializer
+    filter_backends = [ShowFriendPart_2]
+
+class UnfriendView(APIView):
+
+    def get_objects(self, account_id, id):
+        queryset = Friends.objects.filter(receiver_account=id)
+        try:
+            return queryset.get(sender_account = account_id)
+        except(Friends.DoesNotExist):
+            friend = Friends.objects.filter(sender_account=id)
+            try:
+                return friend.get(receiver_account=account_id)
+            except(Friends.DoesNotExist):
+                return None
+
+    def get(self, request, id, format=None):
+        account = Account.objects.get(user = request.user)
+        friend = self.get_objects(account.id, id)
+        if(friend):
+            # print(friend.id, friend.receiver_account, friend.sender_account)
+            friend.delete()
+        serializer = serializers.FriendSerializer(friend)
+        return Response(serializer.data)
+    
+class IsFriendView(APIView):
+    # permission_classes = permissions.IsAuthenticatedOrReadOnly
+    def get_objects(self, account_id, id):
+        queryset = Friends.objects.filter(receiver_account=id)
+        try:
+            return queryset.get(sender_account = account_id)
+        except(Friends.DoesNotExist):
+            friend = Friends.objects.filter(sender_account=id)
+            try:
+                return friend.get(receiver_account=account_id)
+            except(Friends.DoesNotExist):
+                return None
+            
+    def get(self, request, id_, id, format=None):
+        
+        account = Account.objects.get(id = id_)
+        friend = self.get_objects(account.id, id)
+        serializer = serializers.FriendSerializer(friend)
+        return Response(serializer.data)
+    
+# class SendRequest(filters.BaseFilterBackend):
+#     def filter_queryset(self, request, queryset, view):
+#         account_id = request.query_params.get('account_id')
+#         if account_id:
+#             return queryset.filter(sender = account_id)
+#         return queryset
+    
+class receiveRequest(filters.BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        account_id = request.query_params.get('account_id')
+        if account_id:
+            return queryset.filter(receiver = account_id)
+        return queryset
+
+class SendRequestView(APIView):
+    # queryset = FriendRequest.objects.all()
+    # serializer_class = serializers.FriendRequestSerializer
+    # filter_backends = [SendRequest]
+    def get_objects(self, account_id, id):
+        queryset = FriendRequest.objects.filter(receiver=id)
+        try:
+            return queryset.get(sender = account_id)
+        except(FriendRequest.DoesNotExist):
+            return None
+        
+    def get(self, request, id_, id, format=None):
+        
+        account = Account.objects.get(id = id_)
+        friend_request = self.get_objects(account.id, id)
+        serializer = serializers.FriendRequestSerializer(friend_request)
+        return Response(serializer.data)
+
+class ReceiveRequestView(generics.ListAPIView):
+    queryset = FriendRequest.objects.all()
+    serializer_class = serializers.FriendRequestSerializer
+    filter_backends = [receiveRequest]
+
+
+
+
+
+        

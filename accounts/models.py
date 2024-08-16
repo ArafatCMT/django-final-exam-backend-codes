@@ -13,3 +13,14 @@ class Account(models.Model):
 
     def __str__(self):
         return f"{self.user.first_name} {self.user.last_name}"
+    
+class FriendRequest(models.Model):#
+    sender = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='sender')
+    receiver = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='receiver')
+
+class Friends(models.Model):#
+    receiver_account = models.ForeignKey(Account, on_delete=models.CASCADE, related_name='receiver_account')
+    sender_account = models.ForeignKey(Account, on_delete=models.CASCADE , related_name='sender_account')
+
+    class Meta:
+        verbose_name_plural = "Friends"
